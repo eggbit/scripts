@@ -1,15 +1,29 @@
 #!/bin/sh
 
+SAFARI_CACHE_DIR=~/Library/Caches/com.apple.Safari
+CHROME_CACHE_DIR=~/Library/caches/Google/Chrome/default/cache
+RAMDISK_NAME="RAM Disk"
+RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
+
+# $1 = path to move
+move_to_ram() {
+    if [[ -d "$1" ]]; then
+        mv $1 "/Volumes/$RAMDISK_NAME/$(basename $1)"
+    else
+        mkdir "/Volumes/$RAMDISK_NAME/$(basename $1)"
+    fi
+
+    ln -s "/Volumes/$RAMDISK_NAME/$(basename $1)" $1
+}
+
 echo "Creating 2GB ramdisk..."
-diskutil erasevolume HFS+ 'RAM Disk' `hdiutil attach -nomount ram://4194304`
+diskutil erasevolume HFS+ "$RAMDISK_NAME" `hdiutil attach -nomount ram://$RAMDISK_SIZE`
 
-echo "Moving Chrome cache to to ramdisk and symlinking it back..."
-mv  ~/Library/caches/Google/Chrome/default/cache "/Volumes/RAM Disk/cache"
-ln -s "/Volumes/RAM Disk/cache" ~/Library/caches/Google/Chrome/default/cache
+echo "Moving Safari cache to ramdisk..."
+move_to_ram $SAFARI_CACHE_DIR
 
-echo "Moving Safari cache to to ramdisk and symlinking it back..."
-mv  ~/Library/Caches/com.apple.Safari "/Volumes/RAM Disk/com.apple.Safari"
-ln -s "/Volumes/RAM Disk/com.apple.Safari" ~/Library/Caches/com.apple.Safari
+echo "Moving Chrome cache to ramdisk..."
+move_to_ram $CHROME_CACHE_DIR
 
 echo "Done!"
 
