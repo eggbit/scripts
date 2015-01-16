@@ -20,6 +20,8 @@ brew install git
 brew install python
 brew install node
 brew install zsh
+brew install --HEAD tidy
+brew install jshint
 
 brew cask install firefoxdeveloperedition
 brew cask install google-chrome-dev
