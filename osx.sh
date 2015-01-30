@@ -18,6 +18,12 @@ sudo scutil --set HostName $response
 sudo scutil --set LocalHostName $response
 sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string $response
 
+echo "Setting noatime on SSD..."
+sudo cp com.nullvision.noatime.plist /Library/LaunchDaemons/
+sudo chown root:wheel /Library/LaunchDaemons/com.nullvision.noatime.plist
+sudo chmod 644 /Library/LaunchDaemons/com.nullvision.noatime.plist
+sudo launchctl load -w /Library/LaunchDaemons/com.nullvision.noatime.plist
+
 echo "Hiding the Spotlight icon..."
 sudo chmod 600 /System/Library/CoreServices/Search.bundle/Contents/MacOS/Search
 
@@ -84,7 +90,7 @@ echo "Disabling smart quotes and smart dashes..."
 defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
 defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
-echo "Disabling hibernation..." 
+echo "Disabling hibernation..."
 sudo pmset -a hibernatemode 0
 
 echo "Removing sleep image file..."
