@@ -83,8 +83,8 @@ sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo Hos
 echo "Check for software updates daily, not just once per week..."
 defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
 
-echo "Removing duplicates in the 'Open With' menu..."
-/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user
+# echo "Removing duplicates in the 'Open With' menu..."
+# /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user
 
 echo "Disabling smart quotes and smart dashes..."
 defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
