@@ -8,12 +8,11 @@ RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
 
 # $1 = path to move
 move_to_ram() {
-    mkdir "/Volumes/$RAMDISK_NAME/$(basename $1)"
-
     if [[ ! -L $1 ]]; then
         mv $1 "/Volumes/$RAMDISK_NAME/$(basename $1)"
     else
         unlink $1
+        mkdir "/Volumes/$RAMDISK_NAME/$(basename $1)"
     fi
 
     ln -s "/Volumes/$RAMDISK_NAME/$(basename $1)" $1
