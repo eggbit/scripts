@@ -2,16 +2,18 @@
 
 SAFARI_CACHE_DIR=~/Library/Caches/com.apple.Safari
 CHROME_CACHE_DIR=~/Library/caches/Google/Chrome/default/cache
-SPOTIFY_CACHE_DIR=~/Library/caches/com.spotify.client
-RAMDISK_NAME="RAM Disk"
+SPOTIFY_CACHE_DIR=~/Library/caches/com.spotify.client/storage
+RAMDISK_NAME="ramdisk_$(date | md5 | cut -c 1-3)"
 RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
 
 # $1 = path to move
 move_to_ram() {
-    if [[ -d "$1" ]]; then
+    mkdir "/Volumes/$RAMDISK_NAME/$(basename $1)"
+
+    if [[ ! -L $1 ]]; then
         mv $1 "/Volumes/$RAMDISK_NAME/$(basename $1)"
     else
-        mkdir "/Volumes/$RAMDISK_NAME/$(basename $1)"
+        unlink $1
     fi
 
     ln -s "/Volumes/$RAMDISK_NAME/$(basename $1)" $1
