@@ -1,10 +1,10 @@
 #!/bin/bash
 
 rand() {
-    eval uuidgen | md5 | cut -c 1-4
+    eval uuidgen | cut -c 1-4 | tr 'A-Z' 'a-z'
 }
 
-# # $1 = path to move
+# $1 = path to move
 move_to_ram() {
     local ramdisk_path
     ramdisk_path="/Volumes/$RAMDISK_NAME/$(rand)/$(basename "$1")"
