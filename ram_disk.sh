@@ -1,7 +1,7 @@
 #!/bin/bash
 
 rand() {
-    eval uuidgen | cut -c 1-4 | tr 'A-Z' 'a-z'
+    eval dd if=/dev/random count=1 2>/dev/null | md5 | cut -c 1-4
 }
 
 # $1 = path to move
