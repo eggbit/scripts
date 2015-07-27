@@ -25,7 +25,7 @@ CACHE_PATHS=(
     ~/library/caches/com.apple.safari
     ~/library/caches/google/chrome/default/cache
     # ~/library/caches/com.spotify.client/storage
-    # ~/library/caches/com.spotify.client/data
+    ~/library/caches/com.spotify.client/data
 )
 
 # echo "Creating 2GB ramdisk..."
