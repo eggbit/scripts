@@ -18,14 +18,14 @@ move_to_ram() {
     ln -sf "$ramdisk_path" "$1"
 }
 
-RAMDISK_NAME="ramdisk_$(rand)"
+RAMDISK_NAME="ramdisk"
 RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
 
 CACHE_PATHS=(
     ~/library/caches/com.apple.safari
     ~/library/caches/google/chrome/default/cache
-    ~/library/caches/com.spotify.client/storage
-    ~/library/caches/com.spotify.client/data
+    # ~/library/caches/com.spotify.client/storage
+    # ~/library/caches/com.spotify.client/data
 )
 
 # echo "Creating 2GB ramdisk..."
