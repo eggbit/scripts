@@ -24,6 +24,8 @@ brew install node
 brew install zsh
 brew install wget
 brew install tree
+brew install rbenv --HEAD
+brew install ruby-build
 
 brew cask install firefoxdeveloperedition
 brew cask install google-chrome-dev
