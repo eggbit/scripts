@@ -1,5 +1,15 @@
 #!/bin/bash
 
+RAMDISK_NAME="ramdisk2"
+RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
+
+CACHE_PATHS=(
+    ~/library/caches/com.apple.safari
+    ~/library/caches/google/chrome/default/cache
+    # ~/library/caches/com.spotify.client/storage
+    ~/library/caches/com.spotify.client/data
+)
+
 rand() {
     eval dd if=/dev/random count=1 2>/dev/null | md5 | cut -c 1-4
 }
@@ -18,15 +28,11 @@ move_to_ram() {
     ln -sf "$ramdisk_path" "$1"
 }
 
-RAMDISK_NAME="ramdisk"
-RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
-
-CACHE_PATHS=(
-    ~/library/caches/com.apple.safari
-    ~/library/caches/google/chrome/default/cache
-    # ~/library/caches/com.spotify.client/storage
-    ~/library/caches/com.spotify.client/data
-)
+# If ramdisk already exists, unmount it first.
+if [[ -n $(ls /volumes/$RAMDISK_NAME 2> /dev/null) ]]; then
+    echo "Unmounting current ramdisk..."
+    $(umount /volumes/$RAMDISK_NAME)
+fi
 
 # echo "Creating 2GB ramdisk..."
 diskutil erasevolume HFS+ "$RAMDISK_NAME" $(hdiutil attach -nomount ram://$RAMDISK_SIZE)
