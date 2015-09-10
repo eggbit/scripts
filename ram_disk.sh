@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RAMDISK_NAME="ramdisk2"
+RAMDISK_NAME="ramdisk"
 RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
 
 CACHE_PATHS=(
@@ -31,7 +31,7 @@ move_to_ram() {
 # If ramdisk already exists, unmount it first.
 if [[ -n $(ls /volumes/$RAMDISK_NAME 2> /dev/null) ]]; then
     echo "Unmounting current ramdisk..."
-    $(umount /volumes/$RAMDISK_NAME)
+    $(diskutil unmountDisk force /volumes/$RAMDISK_NAME)
 fi
 
 # echo "Creating 2GB ramdisk..."
