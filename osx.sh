@@ -18,12 +18,6 @@ sudo scutil --set HostName $response
 sudo scutil --set LocalHostName $response
 sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string $response
 
-echo "Setting noatime on SSD..."
-sudo cp com.nullvision.noatime.plist /Library/LaunchDaemons/
-sudo chown root:wheel /Library/LaunchDaemons/com.nullvision.noatime.plist
-sudo chmod 644 /Library/LaunchDaemons/com.nullvision.noatime.plist
-sudo launchctl load -w /Library/LaunchDaemons/com.nullvision.noatime.plist
-
 echo "Hiding the Spotlight icon..."
 sudo chmod 600 /System/Library/CoreServices/Search.bundle/Contents/MacOS/Search
 
