@@ -17,7 +17,7 @@ if [[ ! -d "$2" ]]; then
 fi
 
 # Fetch Twitch data.
-url="http://api.twitch.tv/kraken/channels/$1/videos?limit=8&offset=0&broadcasts=true&on_site=1"
+url="http://api.twitch.tv/kraken/channels/$1/videos?limit=20&offset=0&broadcasts=true&on_site=1"
 json=$(wget -qO- $url)
 
 # Extract information.
@@ -38,5 +38,5 @@ for (( i = 0; i < ${#urls[*]}; i++ )); do
     fi
 
     # touch "$filepath"
-    livestreamer -o "$filepath" --hls-segment-threads 4 "${urls[i]}" source
+    livestreamer -o "$filepath" --hls-segment-threads 4 --hls-segment-attempts 50 --hls-segment-timeout 30 "${urls[i]}" best
 done
