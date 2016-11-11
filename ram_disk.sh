@@ -1,13 +1,14 @@
 #!/bin/bash
 
 RAMDISK_NAME="ramdisk"
-RAMDISK_SIZE=4194304 # megabytes_you_want * 2048
+RAMDISK_SIZE=2097152 # megabytes_you_want * 2048
 
 CACHE_PATHS=(
     ~/library/caches/com.apple.safari/WebKitCache
     ~/library/caches/google/chrome/default/cache
-    ~/library/caches/com.spotify.client/storage
-    ~/library/caches/com.spotify.client/data
+    ~/library/caches/google/chrome\ canary/default/cache
+    # ~/library/caches/com.spotify.client/storage
+    # ~/library/caches/com.spotify.client/data
 )
 
 rand() {
