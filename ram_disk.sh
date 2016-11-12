@@ -1,7 +1,8 @@
 #!/bin/bash
 
-RAMDISK_NAME="ramdisk"
-RAMDISK_SIZE=2097152 # megabytes_you_want * 2048
+RAMDISK_NAME="ramdisk_test"
+RAMDISK_SIZE=524288 # megabytes_you_want * 2048
+RAMDISK_USER=$1
 
 CACHE_PATHS=(
     ~/library/caches/com.apple.safari/WebKitCache
@@ -30,18 +31,33 @@ move_to_ram() {
 }
 
 # If ramdisk already exists, unmount it first.
-if [[ -n $(ls /volumes/$RAMDISK_NAME 2> /dev/null) ]]; then
+if [[ -d /volumes/$RAMDISK_NAME ]]; then
+    # Clean up if the same ramdisk already exists.
     echo "Unmounting current ramdisk..."
-    $(diskutil unmountDisk force /volumes/$RAMDISK_NAME)
+
+    t=$(cat /volumes/$RAMDISK_NAME/mount)
+    zpool destroy -f $RAMDISK_NAME && diskutil eject $t
 fi
 
-# echo "Creating 2GB ramdisk..."
-diskutil erasevolume HFS+ "$RAMDISK_NAME" $(hdiutil attach -nomount ram://$RAMDISK_SIZE)
+if [[ $1 ]]; then
+    # Create, format, and mount new ramdisk
+    RAMDISK_MOUNT=$(hdiutil attach -nomount ram://$RAMDISK_SIZE)
+    zpool create -f -o ashift=12 -O casesensitivity=insensitive -O normalization=formD -O atime=off -O compression=lz4 -O checksum=off -O sync=disabled $RAMDISK_NAME $RAMDISK_MOUNT && \
+    chown -R $RAMDISK_USER /volumes/$RAMDISK_NAME 2> /dev/null
+    sleep 1
+    rm -rf /volumes/$RAMDISK_NAME 2> /dev/null
+    echo $RAMDISK_MOUNT > /volumes/$RAMDISK_NAME/mount
+else
+    echo "Pass username, please..."
+fi
+# Create, format, and mount ramdisk.
 
-for i in "${CACHE_PATHS[@]}"
-do
-    echo "Moving to $RAMDISK_NAME: $i"
-    move_to_ram "$i"
-done
+# diskutil erasevolume HFS+ "$RAMDISK_NAME" $(hdiutil attach -nomount ram://$RAMDISK_SIZE)
+
+# for i in "${CACHE_PATHS[@]}"
+# do
+#     echo "Moving to $RAMDISK_NAME: $i"
+#     move_to_ram "$i"
+# done
 
 echo "Done!"
