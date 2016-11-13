@@ -18,10 +18,7 @@ rand() {
 
 # $1 = path to move
 move_to_ram() {
-    local ramdisk_path
-    ramdisk_path="/Volumes/$RAMDISK_NAME/$(rand)/$(basename "$1")"
-
-    mkdir -p "$ramdisk_path"
+    mkdir -p "/Volumes/$RAMDISK_NAME/$(rand)/$(basename "$1")"
 
     if [[ -d "$1" ]]; then
         mv "$1" "$(dirname "$ramdisk_path")"
@@ -32,27 +29,44 @@ move_to_ram() {
 
 # If ramdisk already exists, unmount it first.
 if [[ -d /volumes/$RAMDISK_NAME ]]; then
-    # Clean up if the same ramdisk already exists.
     echo "Unmounting current ramdisk..."
 
-    t=$(cat /volumes/$RAMDISK_NAME/mount)
-    zpool destroy -f $RAMDISK_NAME && diskutil eject $t
+    t=$(cat /volumes/$RAMDISK_NAME/.mount)
+
+    if hash zpool 2> /dev/null; then
+        zpool destroy -f $RAMDISK_NAME
+    else
+        diskutil unmountDisk force /volumes/$RAMDISK_NAME
+    fi
+
+    diskutil eject $t
 fi
 
 if [[ $1 ]]; then
     # Create, format, and mount new ramdisk
     RAMDISK_MOUNT=$(hdiutil attach -nomount ram://$RAMDISK_SIZE)
-    zpool create -f -o ashift=12 -O casesensitivity=insensitive -O normalization=formD -O atime=off -O compression=lz4 -O checksum=off -O sync=disabled $RAMDISK_NAME $RAMDISK_MOUNT && \
-    chown -R $RAMDISK_USER /volumes/$RAMDISK_NAME 2> /dev/null
-    sleep 1
+
+    if hash zpool 2> /dev/null; then
+        zpool create -f -o ashift=12 -O casesensitivity=insensitive -O normalization=formD -O atime=off -O compression=lz4 -O checksum=off -O sync=disabled $RAMDISK_NAME $RAMDISK_MOUNT
+    else
+        diskutil erasevolume HFS+ "$RAMDISK_NAME" $RAMDISK_MOUNT
+        diskutil disableJournal $RAMDISK_MOUNT
+    fi
+
+    # Set user pemissions and empty out the disk.
+    sleep 1 && chown -R $RAMDISK_USER /volumes/$RAMDISK_NAME 2> /dev/null && sleep 1
     rm -rf /volumes/$RAMDISK_NAME 2> /dev/null
-    echo $RAMDISK_MOUNT > /volumes/$RAMDISK_NAME/mount
+
+    # Save the mount point for unmounting later and make OSX happy.
+    echo $RAMDISK_MOUNT > /volumes/$RAMDISK_NAME/.mount
+    touch /volumes/$RAMDISK_NAME/.Trashes /volumes/$RAMDISK_NAME/.metadata_never_index
 else
     echo "Pass username, please..."
 fi
-# Create, format, and mount ramdisk.
 
-# diskutil erasevolume HFS+ "$RAMDISK_NAME" $(hdiutil attach -nomount ram://$RAMDISK_SIZE)
+# if hash zpool 2> /dev/null; then
+#     echo "zpool exists!"
+# fi
 
 # for i in "${CACHE_PATHS[@]}"
 # do
