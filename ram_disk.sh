@@ -35,7 +35,7 @@ ramdisk_mount() {
     local RAMDISK_MOUNT=$(hdiutil attach -nomount ram://$2)
 
     if hash zpool 2> /dev/null; then
-        zpool create -f -o ashift=12 -O casesensitivity=insensitive -O normalization=formD -O atime=off -O compression=lz4 -O checksum=off -O sync=disabled $1 $RAMDISK_MOUNT
+        zpool create -f -o ashift=10 -O casesensitivity=insensitive -O normalization=formD -O atime=off -O compression=lz4 -O checksum=off -O sync=disabled $1 $RAMDISK_MOUNT
     else
         diskutil erasevolume HFS+ "$1" $RAMDISK_MOUNT
         diskutil disableJournal $RAMDISK_MOUNT
