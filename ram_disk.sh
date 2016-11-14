@@ -1,77 +1,86 @@
 #!/bin/bash
-
-RAMDISK_NAME="ramdisk_test"
-RAMDISK_SIZE=524288 # megabytes_you_want * 2048
+RAMDISK_NAME="ramdisk"
+RAMDISK_PATH="/volumes/$RAMDISK_NAME"
+RAMDISK_SIZE=1048576 # megabytes_you_want * 2048
 RAMDISK_USER=$1
 
 CACHE_PATHS=(
     ~/library/caches/com.apple.safari/WebKitCache
     ~/library/caches/google/chrome/default/cache
     ~/library/caches/google/chrome\ canary/default/cache
-    # ~/library/caches/com.spotify.client/storage
-    # ~/library/caches/com.spotify.client/data
 )
 
-rand() {
-    eval dd if=/dev/random count=1 2>/dev/null | md5 | cut -c 1-4
+# $1 = path to check
+# $2 = name of ramdisk
+ramdisk_check() {
+    # If ramdisk already exists, unmount it first.
+    if [[ -d $1 ]]; then
+        echo "Unmounting current ramdisk..."
+
+        MOUNT_POINT=$(cat $1/.mount)
+
+        if hash zpool 2> /dev/null; then
+            zpool destroy -f $2
+        else
+            diskutil unmountDisk force $1
+        fi
+
+        diskutil eject $MOUNT_POINT
+    fi
 }
 
-# $1 = path to move
-move_to_ram() {
-    mkdir -p "/Volumes/$RAMDISK_NAME/$(rand)/$(basename "$1")"
-
-    if [[ -d "$1" ]]; then
-        mv "$1" "$(dirname "$ramdisk_path")"
-    fi
-
-    ln -sf "$ramdisk_path" "$1"
-}
-
-# If ramdisk already exists, unmount it first.
-if [[ -d /volumes/$RAMDISK_NAME ]]; then
-    echo "Unmounting current ramdisk..."
-
-    t=$(cat /volumes/$RAMDISK_NAME/.mount)
+# $1 = name of ramdisk
+# $2 = size of ramdisk
+ramdisk_mount() {
+    local RAMDISK_MOUNT=$(hdiutil attach -nomount ram://$2)
 
     if hash zpool 2> /dev/null; then
-        zpool destroy -f $RAMDISK_NAME
+        zpool create -f -o ashift=12 -O casesensitivity=insensitive -O normalization=formD -O atime=off -O compression=lz4 -O checksum=off -O sync=disabled $1 $RAMDISK_MOUNT
     else
-        diskutil unmountDisk force /volumes/$RAMDISK_NAME
-    fi
-
-    diskutil eject $t
-fi
-
-if [[ $1 ]]; then
-    # Create, format, and mount new ramdisk
-    RAMDISK_MOUNT=$(hdiutil attach -nomount ram://$RAMDISK_SIZE)
-
-    if hash zpool 2> /dev/null; then
-        zpool create -f -o ashift=12 -O casesensitivity=insensitive -O normalization=formD -O atime=off -O compression=lz4 -O checksum=off -O sync=disabled $RAMDISK_NAME $RAMDISK_MOUNT
-    else
-        diskutil erasevolume HFS+ "$RAMDISK_NAME" $RAMDISK_MOUNT
+        diskutil erasevolume HFS+ "$1" $RAMDISK_MOUNT
         diskutil disableJournal $RAMDISK_MOUNT
     fi
 
+    echo $RAMDISK_MOUNT
+}
+
+# $1 = full path of created ramdisk
+# $2 = user that will use ramisk
+# $3 = mount point of created ramdisk
+ramdisk_clean() {
     # Set user pemissions and empty out the disk.
-    sleep 1 && chown -R $RAMDISK_USER /volumes/$RAMDISK_NAME 2> /dev/null && sleep 1
-    rm -rf /volumes/$RAMDISK_NAME 2> /dev/null
+    sleep 1 && chown -R $2 $1 2> /dev/null && sleep 1
+    rm -rf $1 2> /dev/null
 
     # Save the mount point for unmounting later and make OSX happy.
-    echo $RAMDISK_MOUNT > /volumes/$RAMDISK_NAME/.mount
-    touch /volumes/$RAMDISK_NAME/.Trashes /volumes/$RAMDISK_NAME/.metadata_never_index
+    echo $3 > $1/.mount
+    touch $1/.Trashes $1/.metadata_never_index
+}
+
+# $1 = path to move
+# $2 = path to ramdisk
+move_to_ram() {
+    local dir_path="$2/$(dd if=/dev/random count=1 2>/dev/null | md5 | cut -c 1-4)/$(basename "$1")"
+    mkdir -p "$dir_path"
+
+    if [[ -d "$1" ]]; then
+        mv "$1"/* "$dir_path" 2> /dev/null
+        rm -rf "$1"
+    fi
+
+    ln -sf "$dir_path" "$1"
+}
+
+if [ $1 ] && [ $EUID -eq 0 ]; then
+    ramdisk_check $RAMDISK_PATH $RAMDISK_NAME
+    mount=$(ramdisk_mount $RAMDISK_NAME $RAMDISK_SIZE)
+    ramdisk_clean $RAMDISK_PATH $RAMDISK_USER $mount
+
+    for i in "${CACHE_PATHS[@]}"
+    do
+        echo "Moving to $RAMDISK_NAME: $i"
+        move_to_ram "$i" $RAMDISK_PATH
+    done
 else
-    echo "Pass username, please..."
+    echo "Pass username and/or run as root."
 fi
-
-# if hash zpool 2> /dev/null; then
-#     echo "zpool exists!"
-# fi
-
-# for i in "${CACHE_PATHS[@]}"
-# do
-#     echo "Moving to $RAMDISK_NAME: $i"
-#     move_to_ram "$i"
-# done
-
-echo "Done!"
