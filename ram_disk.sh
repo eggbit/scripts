@@ -5,9 +5,9 @@ RAMDISK_SIZE=1048576 # megabytes_you_want * 2048
 RAMDISK_USER=$1
 
 CACHE_PATHS=(
-    ~/library/caches/com.apple.safari/WebKitCache
-    ~/library/caches/google/chrome/default/cache
-    ~/library/caches/google/chrome\ canary/default/cache
+    /users/$RAMDISK_USER/library/caches/com.apple.safari/WebKitCache
+    /users/$RAMDISK_USER/library/caches/google/chrome/default/cache
+    /users/$RAMDISK_USER/library/caches/google/chrome\ canary/default/cache
 )
 
 # $1 = path to check
@@ -45,15 +45,14 @@ ramdisk_mount() {
 }
 
 # $1 = full path of created ramdisk
-# $2 = user that will use ramisk
-# $3 = mount point of created ramdisk
+# $2 = mount point of created ramdisk
 ramdisk_clean() {
     # Set user pemissions and empty out the disk.
-    sleep 1 && chown -R $2 $1 2> /dev/null && sleep 1
+    sleep 1 && chmod u+rw,g+rw,o+rw -R $1 2> /dev/null && sleep 1
     rm -rf $1 2> /dev/null
 
     # Save the mount point for unmounting later and make OSX happy.
-    echo $3 > $1/.mount
+    echo $2 > $1/.mount
     touch $1/.Trashes $1/.metadata_never_index
 }
 
@@ -74,7 +73,7 @@ move_to_ram() {
 if [ $1 ] && [ $EUID -eq 0 ]; then
     ramdisk_check $RAMDISK_PATH $RAMDISK_NAME
     mount=$(ramdisk_mount $RAMDISK_NAME $RAMDISK_SIZE)
-    ramdisk_clean $RAMDISK_PATH $RAMDISK_USER $mount
+    ramdisk_clean $RAMDISK_PATH $mount
 
     for i in "${CACHE_PATHS[@]}"
     do
