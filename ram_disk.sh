@@ -6,6 +6,7 @@ RAMDISK_USER=$1
 
 CACHE_PATHS=(
     /users/$RAMDISK_USER/library/caches/com.apple.safari/WebKitCache
+    /users/$RAMDISK_USER/library/caches/com.apple.SafariTechnologyPreview/WebKitCache
     /users/$RAMDISK_USER/library/caches/google/chrome/default/cache
     /users/$RAMDISK_USER/library/caches/google/chrome\ canary/default/cache
 )
@@ -46,10 +47,10 @@ ramdisk_mount() {
 
 # $1 = full path of created ramdisk
 # $2 = mount point of created ramdisk
+# $3 = user
 ramdisk_clean() {
     # Set user pemissions and empty out the disk.
-    sleep 1 && chmod u+rw,g+rw,o+rw -R $1 2> /dev/null && sleep 1
-    rm -rf $1 2> /dev/null
+    sleep 1 && chown -R $3 $1 && sleep 1 && rm -rf $1
 
     # Save the mount point for unmounting later and make OSX happy.
     echo $2 > $1/.mount
@@ -73,13 +74,15 @@ move_to_ram() {
 if [ $1 ] && [ $EUID -eq 0 ]; then
     ramdisk_check $RAMDISK_PATH $RAMDISK_NAME
     mount=$(ramdisk_mount $RAMDISK_NAME $RAMDISK_SIZE)
-    ramdisk_clean $RAMDISK_PATH $mount
+    ramdisk_clean $RAMDISK_PATH $mount $RAMDISK_USER
 
     for i in "${CACHE_PATHS[@]}"
     do
         echo "Moving to $RAMDISK_NAME: $i"
         move_to_ram "$i" $RAMDISK_PATH
     done
+
+    chmod -R u+rw,g+rw,o+rw $RAMDISK_PATH
 else
     echo "Pass username and/or run as root."
 fi
